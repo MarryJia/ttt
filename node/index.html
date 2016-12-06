@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>http爬虫</title>
+    <style>
+        .pass {
+            color: green
+        }
+
+        .fail {
+            color: red
+        }
+        #box{
+            border:1px solid #00aaa9;position: absolute;
+        }
+
+    </style>
+</head>
+<body>
+<ul id="results">
+
+</ul>
+<div id="first" style="opacity:0.5;filter:alpha(opacity=50)">div1</div>//在chrome中不能使用style.filter获取到值,因为他是ie的属性
+<div id="second">div2</div>
+<button id="button">click me</button>
+<div id="box">Hello!</div>
+<form id="form" action="/conceal">
+    <input type="text" id="action">
+    <input type="submit" id="submit">
+</form>
+<img src="../images/a.png"/>
+<div style="padding:50px;border:1px solid #000;width:300px;height:300px;" id="outer">
+    <div style="padding:20px;border:10px solid #000;width:100px;height:100px;" id="inner">inner</div>
+</div>
+<script>
+    var outerDiv=document.getElementById('outer');
+    outerDiv.addEventListener('mouseover',function () {
+        this.style.border='1px solid #00aaa9'
+    },false);
+    outerDiv.addEventListener('mouseout',function () {
+        this.style.border='1px solid #000'
+    },false);
+
+
+
+
+var img=document.getElementsByTagName('img')[0];
+var newSrc='../images/b.png';
+img.src=newSrc;
+    var what=document.getElementById('form').action;
+    console.log(what);
+    var html="<div><b>hello</b><i>world</i></div>";
+    var pattern=/<(\w+)([^>]*)(.*?)<\/\1>/g;
+    var match=pattern.exec(html);
+    console.log(match+'zhengze')
+    function getOpacity(elem){
+        var filter=elem.style.filter;
+        console.log(elem.style.filter+'aaaa');
+        console.log(filter.match(/opacity=[^)]+ /));
+        return filter?
+                filter.indexOf('opacity=')>=0?
+                        (parseFloat(filter.match(/opacity=([^)]+)/)[1])/100):
+                        '':
+                elem.style.opacity;
+
+    }
+    var num=getOpacity(document.getElementById('first'));
+ console.log(num);
+    var divs = document.getElementsByTagName('div');
+    //    for(var j=0,l=divs.length;j<l;j++){
+    //        console.log(l+'hah')
+    //        divs[j].addEventListener('click',function(){
+    //            alert('divs'+j+'was click')//因为注册完事件之后我们的i更新了,但是闭包记住的是变量的引用,而不是闭包创建时刻该值得值
+    //        },false)
+    //    };
+
+    for (var j = 0, l = divs.length; j < l; j++) {
+        (function (n) {
+            divs[n].addEventListener('click', function () {
+                console.log('divs' + n + 'was click')//因为注册完事件之后我们的i更新了,但是闭包记住的是变量的引用,而不是闭包创建时刻该值得值
+            }, false)
+        })(j)
+    }
+    ;
+    var button = {
+        clicked: false,
+        click: function () {
+            this.clicked = true;
+            console.log(typeof this);
+
+            console.log(button.clicked)
+        }
+    };
+    var btn = document.getElementById('button');
+    btn.addEventListener('click', button.click, false);
+
+
+    var elems = {
+        length: 0,
+        add: function (elem) {
+            Array.prototype.push.call(this, elem);//只是push,但是this为容器这里就是elems
+        },
+        gather: function (id) {
+            this.add(document.getElementById(id))
+        }
+    };
+    elems.gather('first');
+    elems.gather('second');
+    console.log(elems.length + ',' + elems);
+
+    (function () {
+        results = document.getElementById('results');
+        this.assert = function assert(value, desc) {
+            var li = document.createElement('li');
+            li.className = value ? 'pass' : 'fail';
+            li.appendChild(document.createTextNode(desc));
+            results.appendChild(li);
+            if (!value) {
+                li.parentNode.parentNode.className = 'fail';
+            }
+            return li
+        }
+
+    })();
+
+
+    function isNimble() {
+        return true
+    }
+    ;
+    assert(typeof window.isNimble === 'function', 'isNimble() defined');
+    assert(isNimble.name === 'isNimble', 'isNimble() has a name')
+    var canFly = function b() {
+        return true
+    }
+    assert(typeof window.canFly === 'function', 'canFly() defined');
+    assert(canFly.name === 'b', 'canFly() has no name');
+    window.isDeadly = function () {
+        return true
+    }
+    assert(typeof window.isDeadly === 'function', 'isDeadly() defined');
+    assert(isDeadly.name === '', 'isDeadly() has no name');
+    function outer() {
+        assert(typeof inner === 'function', 'inner() in scope before declaration');
+        function inner() {
+        }
+
+        assert(typeof inner === 'function', 'inner() in scope after declaration');
+        assert(window.inner === undefined, 'inner() not in global');
+    }
+    outer();
+    window.a = function a() {
+        return true
+    }
+    assert(a.name === 'a', 'a real name is a');
+
+    //Array.forEach implementation for IE support..
+    //https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/forEach
+    if (!Array.prototype.myforEach) {
+        Array.prototype.myforEach = function (callback, thisArg) {
+            var T, k;
+            if (this == null) {
+                throw new TypeError(" this is null or not defined");
+            }
+            var O = Object(this);
+            var len = O.length >>> 0; // Hack to convert O.length to a UInt32
+            if ({}.toString.call(callback) != "[object Function]") {
+                throw new TypeError(callback + " is not a function");
+            }
+            if (thisArg) {
+                T = thisArg;
+            }
+            k = 0;
+            while (k < len) {
+                var kValue;
+                if (k in O) {
+                    kValue = O[k];
+                    callback.call(T, kValue, k, O);
+                }
+                k++;
+            }
+        };
+    }
+    var a = [1, 2, 3, 4]
+    a.myforEach(function (e) {
+        console.log(e)
+    });
+
+    function huiwen(text) {
+        if (text.length <= 1) return true;
+        if (text.charAt(0) != text.charAt(text.length - 1)) {
+            return false
+        }
+        return huiwen(text.substr(1, text.length - 2))
+    }
+    var store = {
+        nextId: 1,
+        cache: {},
+        add: function (fn) {
+            if (!fn.id) {
+                fn.id = store.nextId++;
+                return !!(store.cache[fn.id] = fn)
+            }
+        }
+    };
+
+
+    function merge(root) {
+        for (var i = 0; i < arguments.length; i++) {
+            for (var key in arguments[i]) {
+                root[key] = arguments[i][key];
+            }
+        }
+        return root
+    }
+    var merged = merge({name: 'jiayajuan'}, {city: 'beijing'});
+    function multMax(multi) {
+        multi * Math.max.apply(Math, arguments.slice(1))
+    }
+    function addMethod(object, name, fn) {
+        var old = object[name];//先保存起来
+        if (fn.length == arguments.length) {
+            return fn.apply(this, arguments)
+        } else if (typeof old == 'function') {
+            return old.apply(this, arguments)
+        }
+    }
+    ;
+    Function.prototype.bind = function () {
+        var fn = this, args = Array.prototype.slice.call(arguments),
+                object = args.shift();//这个是我this指针最终指向的地方;
+        return function () {
+            return fn.apply(object, args.concat(Array.prototype.slice.call(arguments)))
+        }
+    }
+    function o() {
+        this.num = 1;
+        var fn = function (arg) {
+            console.log(this.num + arg)
+        }.bind(this, 2);
+        fn(3);//这里是再次调用bind内部返回的函数,他是返回函数的arguments,但是无论他返回什么,因为调用函数fn只有一个形参,也只有一个形参进行操作,所以不收再出传入参数的影响,所以这个函数就相当于我使用的是调用bind的函数方法,但this却是调用时候传入的第一个参数,就相当于,前面是函数方法,后边第一个是this上下文,之后是传入的参数
+    }
+    new o();
+
+    Function.prototype.partial = function () {
+        var fn = this;
+        var args = arguments;
+        return function () {
+            var arg = 0;
+            for (var i = 0; i < arguments.length; i++) {
+                if (args[i] === undefined) {
+                    args[i] = arguments[arg++];
+                }
+            }
+            return fn.apply(this, args);
+        }
+    }
+
+    //函数currying
+    //    Function.prototype.curry=function () {
+    //        var fn=this;
+    //        args=Array.prototype.slice.call(arguments);
+    //        return function () {
+    //            return fn.apply(this,args.concat(Array.prototype.slice.call(arguments)))
+    //        }
+    //    }
+    String.prototype.csv = String.prototype.split.partial(/,\s*/);//partial就相当于bind,String.prototype.split就是调用的函数,后边的参数
+    var results = ('jia', 'ya', 'juan').csv();
+    console.log(results);
+
+
+    function wrap(object, method, wrapper) {
+        var fn = object[method];
+        object[method] = function () {
+            return wrapper.apply(this, [fn.bind(this)].concat(Array.prototype.slice.call(arguments)))
+        }
+    }
+    var testObj = {
+        name: '我是自己的name',
+        add: function (name) {
+            this.name = name
+        },
+        get: function (id) {
+            console.log(this.add(id));
+        }
+    }
+    wrap(testObj, 'add', function (name) {
+        this.name += name + 'aaa'
+    });
+    testObj.get('jiayajuan');
+    //获取字符串中次数对多的字母
+    function getMore(str) {
+        var arrStr = Array.prototype.slice.call(str);
+        var obj = {};
+        arrStr.forEach(function (e) {
+            obj[e] ? obj[e]++ : obj[e] = 1
+        });
+        //比较大小值(和使用forEach一样,我声明一个第三方值,和他比较如果大就赋值给他)
+        var maxVal = 1;//除去比较还有有一个记录k值得变量
+        var maxChar = ''
+        for (var key in obj) {//key就是属性,不是索引坐标1，2
+            if (obj[key] >= maxVal) {
+                maxChar = key
+                maxVal = obj[key]
+            }
+        }
+        console.log(maxChar)
+
+    }
+
+    //冒泡排序
+    var array = [5, 4, 3, 2, 1];
+    var temp = 0;
+    for (var i = 0; i < array.length; i++) {
+        for (var j = 0; j < array.length - i; j++) {
+            if (array[j] > array[j + 1]) {
+                temp = array[j + 1];
+                array[j + 1] = array[j];
+                array[j] = temp;
+            }
+        }
+    }
+    //快速排序
+    function quickSort(arr) {
+
+        if (arr.length <= 1) {
+            return arr;
+        }
+
+        let leftArr = [];
+        let rightArr = [];
+        let q = arr[0];
+        for (let i = 1, l = arr.length; i < l; i++) {
+            if (arr[i] > q) {
+                rightArr.push(arr[i]);
+            } else {
+                leftArr.push(arr[i]);
+            }
+        }
+
+        return [].concat(quickSort(leftArr), [q], quickSort(rightArr));
+    }
+
+    //找出数组里面的最大差值
+    function getMaxProfit(arr) {
+        var max = Math.max.apply(Math, arr);
+        var min = Math.min.apply(Math, arr);
+        console.log(max - min)
+    }
+    //随记生成指定长度的字符串,具体位置字符串时候charAt,他是列举出所有,随记位置取出来;
+    //对于字符串我直接使用+=就可以,不用变成数组,在join
+    function radomStr(num) {
+        var all = 'abcdefghijklmnopqrstuvwxyj0987654321', min = 0, max = all.length, str = '';
+        for (var i = 0; i < num.length; i++) {
+            str += (all.charAt(Math.floor(Math.random * (max - min))))
+        }
+        return str
+    }
+
+    class Animal {
+        //ES6中新型构造器
+        constructor(name) {
+            this.name = name;
+        }
+
+        //实例方法
+        sayName() {
+            console.log('My name is ' + this.name);
+        }
+    }
+    //类的继承
+    class Programmer extends Animal {
+        constructor(name) {
+            //直接调用父类构造器进行初始化
+            super(name);
+        }
+
+        program() {
+            console.log("I'm coding...");
+        }
+    }
+    //测试我们的类
+    var animal = new Animal('dummy'),
+            wayou = new Programmer('wayou');
+    animal.sayName();//输出 ‘My name is dummy’
+    wayou.sayName();//输出 ‘My name is wayou’
+    wayou.program();//输出 ‘I'm coding...’
+
+
+    function myArray() {
+    }
+    ;
+    myArray.prototype.length = 0;
+    (function () {
+        var methods = ['push', 'shift', 'unshift', 'slice', 'splice', 'pop', 'join', 'concat', 'sort'];
+        for (var i = 0; i < methods.length; i++) {
+            (function (name) {
+                myArray.prototype[name] = function () {
+                    Array.prototype[name].apply(this, arguments);
+                }
+            })(methods[i])
+        }
+    })()
+
+
+    function User(first, last) {
+        console.log(this instanceof arguments.callee);
+        return this.name = first + ' ' + last
+    }
+    var user = new User('jia', 'yajuan');
+
+    function Test() {
+        console.log(this);
+        return this instanceof arguments.callee;
+
+    }
+
+    function Dog(first, last) {
+        console.log(Test());
+        return this.name = first + ' ' + last
+    }
+    var dog = new Dog('wang', 'wang');
+
+
+    var Resource = (function () {
+        var waitingCallbacks = [];
+        var execute = function (cb) {
+            setTimeout(function () {
+                cb(function () {
+                    if (waitingCallbacks.length == 0) return;
+                    execute(waitingCallbacks.shift());
+                });
+            }, 0);
+        };
+        var register = function (cb) {
+            if (waitingCallbacks.length == 0) {
+                execute(cb);
+            } else {
+                waitingCallbacks.push(cb);
+            }
+        }
+        return {
+            register: register,
+            state: 1
+        }
+    })();
+
+
+    var a='opcaity=50'
+    a.match(/opcaity=([^)]+)/)   //结果["opcaity=50", “50”]，正则中小括号可以当做分组，也可以定义捕获，match默认第一个位置是全部匹配的结果，之后就是依次的捕获值
+  a.match(/opcaity=[^)]/)  //结果：["opcaity=5”] 默认只要有一个符合的就返回，
+      a.match(/opcaity=[^)]+/) //结果：["opcaity=50”]符合的匹配多次因为有+但是不是全局匹配
+//    function upper(letter){
+    //        var index=letter.indexOf('-');
+    //        console.log(index+'wo');
+    //        if(index==-1) return;
+    //        var uppercase=letter.replace(/-(.)/,function(){
+    //            return letter.charAt(index+1).toUpperCase()
+    //
+    //        });
+    //       return uppercase
+    //    }
+    function upper(letter){
+        var index=letter.indexOf('-');
+        if(index==-1) return;
+        var uppercase=letter.replace(/-(.)/g,function(all,letter){
+           return letter.toUpperCase()
+        });
+        return uppercase
+    }
+  var uppercase=upper('aaa-bbb-swewe');
+    console.log(uppercase);
+    function myupper(all,letter){
+        return letter.toUpperCase()
+    }
+'wo-shi-jia-ya'.replace(/-(\w)/g,myupper);
+
+var hebing='foo=1&foo=2&blah=a&blah=b&foo=3';
+    function heBing(hebing){
+        var obj={};
+        var arr=[]
+       hebing.replace(/(\w+)=(.*?)(?:&|$)/g,function(all,parm1,parm2){//这块更好的正则:/([^=&]+)=([^&]*)/g;这里不能用match
+           obj[parm1]=(!obj[parm1]?'':obj[parm1]+',')+parm2;
+            return '';
+        })//这块仅仅为了获取obj,之后再去转化他,不要在replace里面去做,这样就会改变原来的值
+for(var k in obj){
+    arr.push(k+'='+obj[k])//这里要显示的字符串,我们就要'='为字符串,直接等于就只有value的值
+}
+  return arr.join('&')
+    }
+   var result= heBing(hebing);
+    console.log(result)
+
+    function trim(str){
+        return str.replace(/^\s+|\s+$/g,'');
+    }
+    var timer={
+        timerID:0,
+        timer:[],
+        add:function(fn){
+            this.timer.push(fn);
+        },
+        start:function(){
+            if(this.timerID) return;//如果正在执行就停止
+            (function runNext() {
+                if(timer.timer.length>0){
+                    for(var i=0;i<timer.timer.length;i++){//所有的都push到timer所以都执行一遍,然后再执行一遍
+                        if(timer.timer[i]()===false){
+                            timer.timer.splice(i,1);
+                            i--;
+                        }
+                    }
+                    timer.timerID=setTimeout(runNext,0)
+                }
+            })()
+        },
+        stop:function () {
+            clearTimeout(this.timerID);//停止当前的就可以,因为js单线程所以每次一个
+            this.timerID=0;
+        }
+
+    }
+var box=document.querySelector('#box'),x=0,y=20;//定时器在所有增加的fn中交替进行,执行一轮之后没到满足条件接着访问,然后从新开始一轮,谁满足条件了 谁就退出
+    timer.add(function () {
+        box.style.left=x+'px';
+        if(++x>50) return false
+    });
+    timer.add(function () {
+        box.style.top=y+'px';
+        y+=2;
+        if(y>120) return false
+    })
+    timer.start();
+
+
+    (function () {
+        var paused=false,queue=[];
+        this.test=function (fn) {
+            queue.push(fn);
+            runTest()
+        };//带this的是之后外部需要调用的,直接写函数是因为外部不需要是内部使用的私有函数,所以写成函数,因为是匿名执行的闭包函数,所以要使用this,这样,赋值给window,外部才可以直接使用,但是我声明的变量等还是私有的,不会污染全局
+        this.resume=function(){
+            paused=false;
+            setTimeout(runTest,1)
+        };
+        this.pause=function () {
+          paused=true//只是暂停,所以其他地方每一步都去判断!paused;这样只要变成false就可以继续
+        };
+        function runTest(){
+            if(!paused && queue.length){
+                queue.shift()();
+                if(!paused ) resume()
+            }
+        }
+
+    })()
+
+    function globalEval(data){
+        data.replace(/^\s*|\s*$/g,'');
+        if(data){
+            var head=document.getElementsByTagName('head')[0]||document.documentElement,
+                script=document.createElement('script');
+            script.type='text/javascript';
+            script.text=data;
+            head.appendChild(script).parentNode.removeChild(script);//一句话搞定
+            //head.removeChild(script);
+        }
+    }
+window.onload=function () {
+    (function () {
+        globalEval("var jiayajuan=5")
+    })()
+    console.log(jiayajuan)
+}
+    function argumentNames(fn) {
+        var found=/^[\s\(]*function[^(]*\(\s*([^)]*?)\s*\)/
+                .exec(fn.toString());
+        return found && found[1]?found[1].split(/,\s*/):
+                []
+    }
+    
+    
+    //jq中attr既可以获取也可以设置,就是利用参数进行重载,但是我可以
+    (function () {
+        var translations={
+            'for':'htmlFor',
+            'class':'className',
+            'readonly':'readOnly',
+            'maxlength':'maxLength',
+            'cellspacing':'cellSpacing',
+            'rowspan':'rowSpan',
+            'colspan':'colSpan',
+            'tabindex':'tabIndex',
+            'cellpadding':'cellPadding',
+            'usemap':'useMap',
+            'frameborder':'frameBorder',
+            'contenteditable':'contentEditable'
+        };//创建映射前面是attribute需要的特性名字,后边是属性div.id这样的调用,这里写的都是不同的,其他像id的都是一样的
+        window.attr=function (element,name,value) {
+            var property=translations[name] || name;
+            var propertyExists=typeof element[property] !== 'undefined';
+            console.log(propertyExists);
+            if(typeof value !== undefined){
+                if(propertyExists){
+                    element[property]=value;
+                }else {
+                    element.setAttribute(name,value);
+                }
+            }
+            return propertyExists?element[property]:element.getAttribute(name)//我只要返回获取就可以了,有我就设置,没有就获取原来的,这样就都是简单的获取
+        }
+    })()
+attr(document.getElementById("second"),'className','hahawoshiclass');//立即执行的函数尽管方法为全局的但是私有变量没有暴露到全局中;比如translations
+
+
+    //通用的添加时间API
+    if(document.addEventListener){
+        this.addEvent=function (elem,type,fn) {//返回fn是为了在函数里面直接清除他
+            elem.addEventListener(type,fn,false);//在他里面,谁触发的事件谁就是fn中的this
+            return fn
+        };
+        this.removeEvent=function (elem,type,fn) {
+            elem.removeEventLister(ele,type,fn)
+        }
+    }else if(document.attachEvent){
+        this.addEvent=function (ele,type,fn) {//这里fn里执行时候的this是window,为了保持一致所以才会使用apply,让fn的this变成调用的元素
+            var bound=function () {
+                return fn.apply(ele,arguments);
+            }
+            elem.attachEvent('on'+type,bound);
+            return bound
+        };
+        this.removeEvent=function (elem,type,fn) {
+            elem.detachEvent('on'+type,fn);
+        }
+    }
+
+
+    (function(jQuery){;
+        jQuery = function( selector, context ) {
+
+            // The jQuery object is actually just the init constructor 'enhanced'
+            // Need init if jQuery is called (just allow error to be thrown if not included)
+            return new jQuery.fn.init( selector, context );
+        },
+          jQuery.fn=jQuery.prototype={
+              get:function (num) {
+                  if(num==null){
+                     return [].slice.call(this)
+                  }else{
+                     return num<0? this[num+length]:this[num]
+                  }
+              }
+          }
+       return jQuery
+    })(jQuery)
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+</head>
+<body ng-controller="myCtrl">
+<div>
+
+    <button ng-add>add</button>
+    <button ng-del>del</button>
+</div>
+<ul ng-repeat="list in lists">
+    <li flag="{{list.flag}}">{{list.name}}:{{list.title}}</li>
+</ul>
+<script>
+    var app = angular.module('app', []);
+         app
+            .controller('myCtrl', function ($scope, $rootScope, myService) {
+
+                $scope.lists = myService.services.init().data;
+                $scope.$on('lists.update', function () {
+                    $scope.lists = myService.data;
+                })
+            })
+            .service('myService', function ($rootScope) {
+
+                var len=5;
+                this.services = {
+                    data: [],
+                    getLists: function () {
+                        return this.data
+                    },
+                    init: function () {
+                            for (var i = 0; i < len; i++) {
+                                this.data.push({name: 'hello' + i, title: 'world' + i, "flag":i})
+                            }
+                        return this;
+                    },
+                    add:function () {
+                        len++;
+                        this.data.push({name: 'hello' + len, title: 'world' + len, flag:len})
+                        $rootScope.$broacast("lists.update");
+                    },
+                    del:function(flag){
+                        for(var i = 0; i< this.data.length; i++) {
+                            if(this.data[i].flag === flag) {
+                                this.data.splice(i, 1);
+                                break ;
+
+                            }
+                        }
+                        len--;
+                        $rootScope.$broacast("lists.update");
+
+
+                    }
+                }
+            })
+            .directive('ngAdd',function () {
+                return {
+                    restrict:'A',
+                    link:function (scope,ele,attr,myService) {
+                        ele.onclick=function () {
+                            myService.del(attr.flag);
+
+                        }
+                    }
+                }
+            })
+</script>
+</body>
+</html>

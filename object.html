@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .color{color:red}
+    </style>
+    <script src="http://apps.bdimg.com/libs/vue/1.0.14/vue.js"></script>
+</head>
+<body>
+<div id="mount-point"></div>
+<script>
+    // 创建可复用的构造器
+    var Profile = Vue.extend({
+        template: '<p>{{firstName}} {{lastName}} aka {{alias}}</p>'
+    })
+    // 创建一个 Profile 实例
+    var profile = new Profile({
+        data: {
+            firstName: 'Walter',
+            lastName: 'White',
+            alias: 'Heisenberg'
+        }
+    })
+    // 挂载到元素上
+    profile.$mount('#mount-point')
+</script>
+
+</body>
+</html>
